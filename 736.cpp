@@ -1,53 +1,37 @@
 #include <vector>
 #include <iostream>
 #include <stdexcept>
+#include <algorithm>
+#include <unordered_map>
+#include <cstdint>
 
-struct Point {
-	int a;
-	int b;
-
-	Point r() {
-		return {a+1, 2*b};
-	}
-	
-	Point s() {
-		return {2*a, b+1};
-	}
-};
-
-typedef std::vector<Point> Path;
-
-// Returns all path to equality of length n
-std::vector<Path> paths_to_equality(Point p, int n);
+// Returns 0 for no path to equality from p of length n, or the final
+uint64_t paths_to_equality(uint64_t a, uint64_t b, int n);
 
 int main() {
-	for (auto n = 1; ; n += 2) {
+	for (auto n = 1; ; n += 1) {
 		printf("%d\n", n);
-		auto paths = paths_to_equality({45, 90}, n);
-		if (paths.size()) {
-			for (auto path : paths) {
-				for (auto point : path) printf("(%d, %d) ", point.a, point.b);
-				printf("\n");
-			}
-			break;
-		}
+
+		auto x = paths_to_equality(45, 90, n);
+		if (x) printf("Final: %llu\n", x);
 	}
 }
 
-std::vector<Path> paths_to_equality(Point p, int n) {
-	if (n < 1) return {};
-	if (p.a == p.b && n != 1) return {};
-	if (p.a == p.b && n == 1) return {{p}};
+inline uint64_t key(uint64_t a, uint64_t b) {
+	return (uint64_t) a << 32 | b;
+}
 
-	auto sub_paths = paths_to_equality(p.r(), n-1);
-	auto s_paths = paths_to_equality(p.s(), n-1);
-	sub_paths.insert(sub_paths.end(), s_paths.begin(), s_paths.end());
+uint64_t paths_to_equality(uint64_t a, uint64_t b, int n) {
+	if (a > 8000000000000000000 || b > 8000000000000000000) printf("big!\n");
+	uint64_t ans;
+	if (n < 1) return 0;
+	if (a == b && n != 1) return 0;
+	if (a == b && n == 1) return a;
 
-	std::vector<Path> out;
-	for (auto path : sub_paths) {
-		path.insert(path.begin(), p);
-		out.push_back(path);
-	}
+	auto rr = paths_to_equality(a+2, 4*b, n-1);
+	auto rs = paths_to_equality(2*a+1, 2*b+2, n-1);
+	auto sr = paths_to_equality(2*a+2, 2*b+1, n-1);
+	auto ss = paths_to_equality(4*a, b+2, n-1);
 
-	return out;
+	return std::max({rr, rs, sr, ss});
 }
