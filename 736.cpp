@@ -4,17 +4,25 @@
 #include <algorithm>
 #include <unordered_map>
 #include <cstdint>
+#include <thread>
 
 // Returns 0 for no path to equality from p of length n, or the final
 uint64_t paths_to_equality(uint64_t a, uint64_t b, int n);
 
 int main() {
-	for (auto n = 1; n < 20 ; n += 1) {
-		printf("%d\n", n);
+	std::vector<std::thread> threads;
 
+	auto f = [](int n){
+		printf("%d\n", n);
 		auto x = paths_to_equality(46, 180, n);
-		if (x) printf("Final: %lu\n", x);
+		if (x) printf("Final (for %d): %lu\n", n, x);
+	};
+	
+	for (auto n = 1; n < 16 ; n += 1) {
+		threads.push_back(std::thread{f, n});
 	}
+
+	for (auto t = threads.begin(); t != threads.end(); ++t) t->join();
 }
 
 inline uint64_t key(uint64_t a, uint64_t b) {
@@ -22,7 +30,7 @@ inline uint64_t key(uint64_t a, uint64_t b) {
 }
 
 uint64_t paths_to_equality(uint64_t a, uint64_t b, int n) {
-	if (a > 8000000000000000000 || b > 8000000000000000000) printf("big!\n");
+	// if (a > 8000000000000000000 || b > 8000000000000000000) printf("big!\n");
 	uint64_t ans;
 	if (n < 1) return 0;
 	if (a == b && n != 1) return 0;
